@@ -2,19 +2,20 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Guia Itapajé Editor</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <style>
     body { margin: 0; background: #e9e9e9; font-family: sans-serif; }
-  .toolbar { position: fixed; top: 0; width: 100%; background: #fff; padding: 8px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; white-space: nowrap; }
-  .toolbar button { margin: 2px; padding: 10px 14px; font-size: 16px; }
+   .toolbar { position: fixed; top: 0; width: 100%; background: #fff; padding: 8px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; white-space: nowrap; }
+   .toolbar button { margin: 2px; padding: 10px 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; }
     #canvas-container { margin-top: 60px; display: flex; justify-content: center; padding: 10px; }
-    canvas { box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-  .painel { display: none; position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 20; max-width: 90%; }
+    canvas { box-shadow: 0 0 10px rgba(0,0,0,0.2); max-width: 100%; height: auto; }
+   .painel { display: none; position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 20; max-width: 90%; }
+    #erro { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: red; color: white; padding: 20px; border-radius: 8px; z-index: 999; }
   </style>
 </head>
 <body>
+  <div id="erro">ERRO: Fabric.js não carregou. Recarrega a página.</div>
   <div class="toolbar">
     <button onclick="addTexto()">Texto</button>
     <button onclick="addImagem()">Imagem</button>
@@ -33,87 +34,109 @@
     <button onclick="girarObjeto(360)">Reset</button>
   </div>
   <div id="painelOpacidade" class="painel">
-    <label>Transparência: <span id="valorOpac">100</span>%</label>
+    <label>Transparência: <span id="valorOpac">100</span>%</label><br>
     <input type="range" min="0" max="100" value="100" oninput="mudarOpacidade(this.value)"><br><br>
-    <label>Brilho: <span id="valorBrilho">0</span></label>
+    <label>Brilho: <span id="valorBrilho">0</span></label><br>
     <input type="range" min="-100" max="100" value="0" oninput="mudarBrilho(this.value)">
   </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
 <script>
-if (typeof fabric === 'undefined') alert('ERRO: Fabric.js não carregou!');
-const canvas = new fabric.Canvas('editor', { backgroundColor: '#ffffff' });
-const FUNDOS_PRONTOS = ['#000000','#FFFFFF','#E63946','#FFD60A','#2A9D8F','#FF5733','#33FF57','#3357FF','#9B5DE5','#F15BB5','#FEE440','#00BBF9','#00F5D4','#FF006E','#8338EC','linear-gradient(45deg, #ff9a9e, #fad0c4)','linear-gradient(45deg, #a1c4fd, #c2e9fb)','linear-gradient(45deg, #d4fc79, #96e6a1)','linear-gradient(45deg, #fbc2eb, #a6c1ee)','linear-gradient(45deg, #fdcbf1, #e6dee9)'];
-function abrirFundos() {
-  const painel = document.getElementById('painelFundos');
-  const grid = painel.querySelector('div');
-  if(grid.children.length === 0) {
-    FUNDOS_PRONTOS.forEach(cor => {
-      const btn = document.createElement('button');
-      btn.style.cssText = `width:40px;height:40px;border:1px solid #ccc;background:${cor}`;
-      btn.onclick = () => aplicarFundo(cor);
-      grid.appendChild(btn);
-    });
+window.onload = function() {
+  if (typeof fabric === 'undefined') {
+    document.getElementById('erro').style.display = 'block';
+    return;
   }
-  fecharPaineis(); painel.style.display = 'block';
-}
-function aplicarFundo(cor) {
-  canvas.setBackgroundColor(cor, canvas.renderAll.bind(canvas));
-  document.getElementById('painelFundos').style.display = 'none';
-}
-function addTexto() {
-  const texto = new fabric.IText('TOQUE PRA EDITAR', { left: 540, top: 675, originX: 'center', originY: 'center', fontSize: 80, fill: '#000', fontFamily: 'Arial' });
-  canvas.add(texto).setActiveObject(texto);
-}
-function addImagem() {
-  const input = document.createElement('input');
-  input.type = 'file'; input.accept = 'image/*';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = f => {
-      fabric.Image.fromURL(f.target.result, img => {
-        if(img.width > 1080) img.scaleToWidth(1080);
-        canvas.add(img).centerObject(img).setActiveObject(img);
+  
+  const canvas = new fabric.Canvas('editor');
+  canvas.backgroundColor = '#ffffff';
+  canvas.renderAll();
+  
+  const FUNDOS = ['#000000','#FFFFFF','#E63946','#FFD60A','#2A9D8F','#FF5733','#33FF57','#3357FF','#9B5DE5','#F15BB5','#FEE440','#00BBF9','#00F5D4','#FF006E','#8338EC','#ff9a9e','#a1c4fd','#d4fc79','#fbc2eb','#fdcbf1'];
+  
+  window.abrirFundos = function() {
+    const painel = document.getElementById('painelFundos');
+    const grid = painel.querySelector('div');
+    if(grid.children.length === 0) {
+      FUNDOS.forEach(cor => {
+        const btn = document.createElement('button');
+        btn.style.cssText = `width:40px;height:40px;border:1px solid #ccc;background:${cor};border-radius:4px`;
+        btn.onclick = () => { canvas.setBackgroundColor(cor, canvas.renderAll.bind(canvas)); fecharPaineis(); };
+        grid.appendChild(btn);
       });
+    }
+    fecharPaineis(); painel.style.display = 'block';
+  }
+  
+  window.addTexto = function() {
+    const texto = new fabric.IText('TOQUE PRA EDITAR', { 
+      left: 540, top: 675, originX: 'center', originY: 'center', 
+      fontSize: 80, fill: '#000', fontFamily: 'Arial' 
+    });
+    canvas.add(texto).setActiveObject(texto);
+  }
+  
+  window.addImagem = function() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = e => {
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = f => {
+        fabric.Image.fromURL(f.target.result, img => {
+          if(img.width > 1080) img.scaleToWidth(1080);
+          canvas.add(img).centerObject(img).setActiveObject(img);
+        });
+      };
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-function mostrarGirar() { fecharPaineis(); document.getElementById('painelGirar').style.display = 'block'; }
-function girarObjeto(angulo) {
-  const obj = canvas.getActiveObject(); if (!obj) return;
-  obj.rotate(angulo === 360? 0 : (obj.angle + angulo) % 360); canvas.renderAll();
-}
-function mostrarOpacidade() {
-  fecharPaineis();
-  const obj = canvas.getActiveObject(); if (!obj) return;
-  document.querySelector('#painelOpacidade input[type=range]').value = obj.opacity * 100;
-  document.getElementById('valorOpac').innerText = Math.round(obj.opacity * 100);
-  document.getElementById('painelOpacidade').style.display = 'block';
-}
-function mudarOpacidade(valor) {
-  const obj = canvas.getActiveObject(); if (!obj) return;
-  obj.set('opacity', valor / 100);
-  document.getElementById('valorOpac').innerText = valor; canvas.renderAll();
-}
-function mudarBrilho(valor) {
-  const obj = canvas.getActiveObject(); if (!obj) return;
-  obj.filters = [new fabric.Image.filters.Brightness({ brightness: valor / 100 })];
-  obj.applyFilters();
-  document.getElementById('valorBrilho').innerText = valor; canvas.renderAll();
-}
-function excluir() { const obj = canvas.getActiveObject(); if(obj) canvas.remove(obj); }
-function fecharPaineis() { document.querySelectorAll('.painel').forEach(p => p.style.display = 'none'); }
-canvas.on('selection:created', () => {
-  document.getElementById('btnGirar').style.display = 'inline-block';
-  document.getElementById('btnOpacidade').style.display = 'inline-block';
-  if(canvas.getObjects().length > 15) alert('Limite de 15 itens pra não travar celular fraco!');
-});
-canvas.on('selection:cleared', () => {
-  document.getElementById('btnGirar').style.display = 'none';
-  document.getElementById('btnOpacidade').style.display = 'none';
-  fecharPaineis();
-});
+    input.click();
+  }
+  
+  window.mostrarGirar = function() { fecharPaineis(); document.getElementById('painelGirar').style.display = 'block'; }
+  window.girarObjeto = function(angulo) {
+    const obj = canvas.getActiveObject(); if (!obj) return;
+    obj.rotate(angulo === 360? 0 : (obj.angle + angulo) % 360); canvas.renderAll();
+  }
+  
+  window.mostrarOpacidade = function() {
+    fecharPaineis();
+    const obj = canvas.getActiveObject(); if (!obj) return;
+    document.querySelector('#painelOpacidade input[type=range]').value = obj.opacity * 100;
+    document.getElementById('valorOpac').innerText = Math.round(obj.opacity * 100);
+    document.getElementById('painelOpacidade').style.display = 'block';
+  }
+  
+  window.mudarOpacidade = function(valor) {
+    const obj = canvas.getActiveObject(); if (!obj) return;
+    obj.set('opacity', valor / 100);
+    document.getElementById('valorOpac').innerText = valor; canvas.renderAll();
+  }
+  
+  window.mudarBrilho = function(valor) {
+    const obj = canvas.getActiveObject(); if (!obj || obj.type!== 'image') return;
+    obj.filters = [new fabric.Image.filters.Brightness({ brightness: valor / 100 })];
+    obj.applyFilters();
+    document.getElementById('valorBrilho').innerText = valor; canvas.renderAll();
+  }
+  
+  window.excluir = function() { const obj = canvas.getActiveObject(); if(obj) canvas.remove(obj); }
+  
+  function fecharPaineis() { document.querySelectorAll('.painel').forEach(p => p.style.display = 'none'); }
+  
+  canvas.on('selection:created', () => {
+    document.getElementById('btnGirar').style.display = 'inline-block';
+    document.getElementById('btnOpacidade').style.display = 'inline-block';
+  });
+  
+  canvas.on('selection:cleared', () => {
+    document.getElementById('btnGirar').style.display = 'none';
+    document.getElementById('btnOpacidade').style.display = 'none';
+    fecharPaineis();
+  });
+  
+  canvas.on('mouse:down', fecharPaineis);
+};
 </script>
 </body>
 </html>
