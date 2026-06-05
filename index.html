@@ -1,159 +1,349 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Editor de Guia v6.8</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { 
-      font-family: Arial, sans-serif; 
-      background: #e5e5e5; 
-      height: 100%;
-    }
-    #toolbar {
-      background: #fff;
-      padding: 10px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    #toolbar button {
-      padding: 12px 16px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      background: #f8f8f8;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #canvas-wrap {
-      display: flex;
-      justify-content: center;
-      padding: 10px;
-    }
-   .canvas-container {
-      width: 100%!important;
-      max-width: 500px!important;
-    }
-    canvas {
-      border: 2px solid #333;
-      background: #fff;
-      width: 100%!important;
-      height: auto!important;
-    }
-    input[type="file"] { display: none; }
-  </style>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Editor de Foto v5</title>
+<style>
+body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
+#editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
+canvas{display:block;width:100%;border:2px solid #333;touch-action:none}
+.controls{padding:10px}
+input[type=text], select{padding:8px;width:60%;margin:4px;border-radius:6px;border:none}
+button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:8px;color:#fff;font-size:13px}
+.btn-azul{background:#2980b9}
+.btn-roxo{background:#8e44ad}
+.btn-laranja{background:#d35400}
+.file-wrap{margin:8px 0}
+#painelObjeto{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
+#painelObjeto h3{margin:0 0 10px 0;font-size:16px}
+.seta{background:#34495e;font-size:18px;padding:8px 14px}
+.seta-move{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:150px;margin:8px auto}
+.seta-move button{padding:12px}
+.cor-picker{display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.cor{width:30px;height:30px;border-radius:50%;border:2px solid #fff;cursor:pointer}
+</style>
 </head>
 <body>
-  <div id="toolbar">
-    <button onclick="addTexto()">Texto</button>
-    <button onclick="document.getElementById('imgInput').click()">Imagem</button>
-    <button onclick="mudarFundo()">Fundo</button>
-    <button onclick="girar()" id="btnGirar" style="display:none">Girar</button>
-    <button onclick="mudarOpacidade()" id="btnOpacidade" style="display:none">Opacidade</button>
-    <button onclick="excluir()">Excluir</button>
+<h2>Editor v5</h2>
+<div class="file-wrap">
+  <input type="file" id="upload" accept="image/*"> Foto base<br>
+  <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
+</div>
+
+<div id="editor-container">
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- PAINEL QUE APARECE QUANDO SELECIONA OBJETO -->
+<div id="painelObjeto">
+  <h3 id="tituloObj">Objeto Selecionado</h3>
+
+  <!-- Setas de Mover -->
+  <div class="seta-move">
+    <div></div>
+    <button class="seta" onclick="mover(0,-5)">↑</button>
+    <div></div>
+    <button class="seta" onclick="mover(-5,0)">←</button>
+    <button class="seta" onclick="mover(0,0)">●</button>
+    <button class="seta" onclick="mover(5,0)">→</button>
+    <div></div>
+    <button class="seta" onclick="mover(0,5)">↓</button>
+    <div></div>
   </div>
-  
-  <input type="file" id="imgInput" accept="image/*" onchange="addImagem(event)">
-  
-  <div id="canvas-wrap">
-    <canvas id="editor" width="1080" height="1350"></canvas>
+
+  <!-- Tamanho -->
+  <button class="seta" onclick="alterarTamanho(1.1)">Tamanho +</button>
+  <button class="seta" onclick="alterarTamanho(0.9)">Tamanho -</button>
+
+  <!-- Só aparece se for texto -->
+  <div id="opcoesTexto" style="display:none">
+    <input type="color" id="corTexto" value="#ffffff" onchange="mudarCor(this.value)">
+    <select id="fonteTexto" onchange="mudarFonte(this.value)">
+      <option value="Arial">Arial</option>
+      <option value="Impact">Impact</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Comic Sans MS">Comic Sans</option>
+      <option value="Courier New">Courier</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+    <div class="cor-picker">
+      <div class="cor" style="background:#ffffff" onclick="mudarCor('#ffffff')"></div>
+      <div class="cor" style="background:#000000" onclick="mudarCor('#000000')"></div>
+      <div class="cor" style="background:#e74c3c" onclick="mudarCor('#e74c3c')"></div>
+      <div class="cor" style="background:#3498db" onclick="mudarCor('#3498db')"></div>
+      <div class="cor" style="background:#2ecc71" onclick="mudarCor('#2ecc71')"></div>
+      <div class="cor" style="background:#f1c40f" onclick="mudarCor('#f1c40f')"></div>
+      <div class="cor" style="background:#9b59b6" onclick="mudarCor('#9b59b6')"></div>
+    </div>
   </div>
 
-  <script src="https://unpkg.com/fabric@5.3.0/dist/fabric.min.js"></script>
-  <script>
-    const canvas = new fabric.Canvas('editor');
-    
-    // Ajusta o zoom pra caber na tela
-    function ajustarTamanho() {
-      const wrap = document.getElementById('canvas-wrap');
-      const larguraDisponivel = wrap.clientWidth - 24;
-      const zoom = larguraDisponivel / 1080;
-      canvas.setZoom(zoom);
-      canvas.setWidth(1080 * zoom);
-      canvas.setHeight(1350 * zoom);
-      canvas.renderAll();
-    }
-    
-    window.addEventListener('resize', ajustarTamanho);
-    ajustarTamanho(); // Chama na hora que carrega
-    
-    canvas.on('selection:created', mostrarBotoes);
-    canvas.on('selection:updated', mostrarBotoes);
-    canvas.on('selection:cleared', esconderBotoes);
-    
-    function mostrarBotoes() {
-      document.getElementById('btnGirar').style.display = 'block';
-      document.getElementById('btnOpacidade').style.display = 'block';
-    }
-    
-    function esconderBotoes() {
-      document.getElementById('btnGirar').style.display = 'none';
-      document.getElementById('btnOpacidade').style.display = 'none';
-    }
+  <button onclick="deletar()" class="btn-laranja">Deletar</button>
+</div>
 
-    function addTexto() {
-      const texto = new fabric.IText('Digite aqui', { 
-        left: 540, 
-        top: 675, 
-        originX: 'center', 
-        originY: 'center', 
-        fontSize: 80, 
-        fill: '#000000',
-        fontFamily: 'Arial'
-      });
-      canvas.add(texto);
-      canvas.setActiveObject(texto);
-      texto.enterEditing();
-      texto.selectAll();
-      canvas.renderAll();
-    }
+<div class="controls">
+  <button onclick="zoomBase(1.2)">Zoom + Base</button>
+  <button onclick="zoomBase(0.8)">Zoom - Base</button>
+  <button onclick="girar()">Girar 90°</button><br>
 
-    function addImagem(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(f) {
-        fabric.Image.fromURL(f.target.result, function(img) {
-          img.scaleToWidth(400);
-          img.set({ left: 540, top: 675, originX: 'center', originY: 'center' });
-          canvas.add(img).setActiveObject(img);
-        });
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
-    }
+  <input type="text" id="texto" placeholder="Digite seu texto">
+  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
 
-    function mudarFundo() {
-      const cor = prompt('Digite: preto, branco, vermelho, azul, verde, amarelo', 'branco');
-      const cores = {
-        'preto': '#000000', 'branco': '#FFFFFF', 'vermelho': '#FF0000',
-        'azul': '#0000FF', 'verde': '#00FF00', 'amarelo': '#FFFF00'
-      };
-      if (cores[cor]) canvas.setBackgroundColor(cores[cor], canvas.renderAll.bind(canvas));
-    }
+  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
+  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
 
-    function girar() {
-      const obj = canvas.getActiveObject();
-      if (obj) { obj.rotate(obj.angle + 90); canvas.renderAll(); }
-    }
+  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
+  <button onclick="salvar()">Salvar PNG</button>
+</div>
 
-    function mudarOpacidade() {
-      const obj = canvas.getActiveObject();
-      if (obj) {
-        const nova = prompt('Opacidade de 0 a 100:', '100');
-        if (nova!== null) { obj.set('opacity', parseInt(nova) / 100); canvas.renderAll(); }
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const painel = document.getElementById('painelObjeto');
+const opcoesTexto = document.getElementById('opcoesTexto');
+let img = new Image();
+let scale = 1, rotacao = 0;
+let objetos = [];
+let selecionado = null;
+
+upload.onchange = e => {
+  const file = e.target.files[0];
+  img.src = URL.createObjectURL(file);
+  img.onload = () => {
+    reset();
+    fitToScreen();
+    desenhar();
+  }
+}
+
+uploadOverlay.onchange = e => {
+  const file = e.target.files[0];
+  let novaImg = new Image();
+  novaImg.src = URL.createObjectURL(file);
+  novaImg.onload = () => {
+    objetos.push({
+      tipo: 'img',
+      img: novaImg,
+      x: canvas.width/2,
+      y: canvas.height/2,
+      w: 150,
+      h: 150 * (novaImg.height/novaImg.width),
+      scale: 1,
+      rotacao: 0
+    });
+    selecionar(objetos.length - 1);
+    desenhar();
+  }
+}
+
+function fitToScreen(){
+  let container = document.getElementById('editor-container');
+  let maxW = container.offsetWidth;
+  let ratio = img.width / img.height;
+  canvas.width = maxW;
+  canvas.height = maxW / ratio;
+  scale = canvas.width / img.width;
+}
+
+function desenhar() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.rotate(rotacao * Math.PI / 180);
+  ctx.scale(scale, scale);
+  ctx.filter = `brightness(${brilho.value}%) contrast(${contraste.value}%)`;
+  ctx.drawImage(img, -img.width/2, -img.height/2);
+  ctx.restore();
+
+  objetos.forEach((obj, i) => {
+    ctx.save();
+    ctx.translate(obj.x, obj.y);
+    ctx.rotate(obj.rotacao * Math.PI / 180);
+    ctx.scale(obj.scale, obj.scale);
+
+    if(obj.tipo === 'texto'){
+      ctx.font = `bold ${obj.size}px ${obj.fonte}`;
+      ctx.fillStyle = obj.cor;
+      ctx.strokeStyle = obj.cor === '#000000'? '#ffffff' : '#000000';
+      ctx.lineWidth = obj.size/12;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeText(obj.txt, 0, 0);
+      ctx.fillText(obj.txt, 0, 0);
+      if(selecionado === i){
+        let w = ctx.measureText(obj.txt).width;
+        ctx.strokeStyle = '#2980b9';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5,5]);
+        ctx.strokeRect(-w/2-8, -obj.size/2-8, w+16, obj.size+16);
+        ctx.setLineDash([]);
+      }
+    } else if(obj.tipo === 'img'){
+      ctx.drawImage(obj.img, -obj.w/2, -obj.h/2, obj.w, obj.h);
+      if(selecionado === i){
+        ctx.strokeStyle = '#2980b9';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5,5]);
+        ctx.strokeRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
+        ctx.setLineDash([]);
       }
     }
+    ctx.restore();
+  });
+}
 
-    function excluir() {
-      const obj = canvas.getActiveObject();
-      if (obj) canvas.remove(obj);
+function selecionar(index){
+  selecionado = index;
+  painel.style.display = 'block';
+  if(objetos[index].tipo === 'texto'){
+    tituloObj.innerText = 'Editando Texto';
+    opcoesTexto.style.display = 'block';
+    corTexto.value = objetos[index].cor;
+    fonteTexto.value = objetos[index].fonte;
+  } else {
+    tituloObj.innerText = 'Editando Imagem';
+    opcoesTexto.style.display = 'none';
+  }
+  desenhar();
+}
+
+function desselecionar(){
+  selecionado = null;
+  painel.style.display = 'none';
+  desenhar();
+}
+
+function mover(dx, dy){
+  if(selecionado === null) return;
+  objetos[selecionado].x += dx;
+  objetos[selecionado].y += dy;
+  desenhar();
+}
+
+function alterarTamanho(fator){
+  if(selecionado === null) return;
+  let obj = objetos[selecionado];
+  if(obj.tipo === 'texto'){
+    obj.size *= fator;
+    if(obj.size < 10) obj.size = 10;
+    if(obj.size > 200) obj.size = 200;
+  } else {
+    obj.scale *= fator;
+    if(obj.scale < 0.1) obj.scale = 0.1;
+    if(obj.scale > 5) obj.scale = 5;
+  }
+  desenhar();
+}
+
+function mudarCor(cor){
+  if(selecionado === null || objetos[selecionado].tipo!== 'texto') return;
+  objetos[selecionado].cor = cor;
+  desenhar();
+}
+
+function mudarFonte(fonte){
+  if(selecionado === null || objetos[selecionado].tipo!== 'texto') return;
+  objetos[selecionado].fonte = fonte;
+  desenhar();
+}
+
+function zoomBase(fator){
+  scale *= fator;
+  desenhar();
+}
+
+function girar() {
+  rotacao = (rotacao + 90) % 360;
+  desenhar();
+}
+
+function addTexto() {
+  if(!texto.value) return;
+  objetos.push({
+    tipo: 'texto',
+    txt: texto.value,
+    x: canvas.width/2,
+    y: canvas.height/2,
+    size: 40,
+    scale: 1,
+    rotacao: 0,
+    cor: '#ffffff',
+    fonte: 'Arial'
+  });
+  selecionar(objetos.length - 1);
+  texto.value = '';
+  desenhar();
+}
+
+function deletar(){
+  if(selecionado!== null){
+    objetos.splice(selecionado, 1);
+    desselecionar();
+  }
+}
+
+function reset() {
+  scale = 1; rotacao = 0; objetos = [];
+  desselecionar();
+  brilho.value = contraste.value = 100;
+  if(img.src) fitToScreen();
+  desenhar();
+}
+
+function salvar() {
+  let temp = selecionado;
+  desselecionar();
+  const link = document.createElement('a');
+  link.download = 'foto-editada-v5.png';
+  link.href = canvas.toDataURL();
+  link.click();
+  if(temp!== null) selecionar(temp);
+}
+
+// Clique pra selecionar
+canvas.onclick = e => {
+  let rect = canvas.getBoundingClientRect();
+  let x = e.clientX - rect.left;
+  let y = e.clientY - rect.top;
+  let achou = false;
+
+  for(let i = objetos.length - 1; i >= 0; i--){
+    let obj = objetos[i];
+    ctx.font = `bold ${obj.size * obj.scale}px ${obj.fonte}`;
+    let w = obj.tipo === 'texto'? ctx.measureText(obj.txt).width : obj.w * obj.scale;
+    let h = obj.tipo === 'texto'? obj.size * obj.scale : obj.h * obj.scale;
+
+    if(x > obj.x - w/2 && x < obj.x + w/2 && y > obj.y - h/2 && y < obj.y + h/2){
+      selecionar(i);
+      achou = true;
+      break;
     }
-  </script>
+  }
+  if(!achou) desselecionar();
+}
+
+// Arrastar com dedo ainda funciona
+let isDragging = false, lastX, lastY;
+canvas.ontouchstart = e => {
+  if(e.touches.length === 1 && selecionado!== null){
+    isDragging = true;
+    let rect = canvas.getBoundingClientRect();
+    lastX = e.touches[0].clientX - rect.left;
+    lastY = e.touches[0].clientY - rect.top;
+  }
+}
+canvas.ontouchmove = e => {
+  if(isDragging && selecionado!== null){
+    e.preventDefault();
+    let rect = canvas.getBoundingClientRect();
+    let x = e.touches[0].clientX - rect.left;
+    let y = e.touches[0].clientY - rect.top;
+    objetos[selecionado].x += x - lastX;
+    objetos[selecionado].y += y - lastY;
+    lastX = x; lastY = y;
+    desenhar();
+  }
+}
+canvas.ontouchend = () => { isDragging = false; }
+</script>
 </body>
 </html>
