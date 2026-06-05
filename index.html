@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Editor de Guia v6.7</title>
+  <title>Editor de Guia v6.8</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { 
       font-family: Arial, sans-serif; 
       background: #e5e5e5; 
-      overflow-x: hidden;
+      height: 100%;
     }
     #toolbar {
       background: #fff;
@@ -30,22 +30,20 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    #toolbar button:active {
-      background: #ddd;
-    }
     #canvas-wrap {
       display: flex;
       justify-content: center;
       padding: 10px;
     }
    .canvas-container {
-      max-width: 100%!important;
-      height: auto!important;
+      width: 100%!important;
+      max-width: 500px!important;
     }
     canvas {
       border: 2px solid #333;
       background: #fff;
-      max-width: 100%;
+      width: 100%!important;
+      height: auto!important;
     }
     input[type="file"] { display: none; }
   </style>
@@ -63,22 +61,26 @@
   <input type="file" id="imgInput" accept="image/*" onchange="addImagem(event)">
   
   <div id="canvas-wrap">
-    <canvas id="editor"></canvas>
+    <canvas id="editor" width="1080" height="1350"></canvas>
   </div>
 
   <script src="https://unpkg.com/fabric@5.3.0/dist/fabric.min.js"></script>
   <script>
-    // Canvas responsivo: ajusta ao tamanho da tela
-    const largura = window.innerWidth - 24; // 10px padding cada lado + 2px borda
-    const altura = largura * 1.25; // Proporção 4:5 do Instagram
-    
-    const canvasEl = document.getElementById('editor');
-    canvasEl.width = 1080;
-    canvasEl.height = 1350;
-    
     const canvas = new fabric.Canvas('editor');
-    canvas.setDimensions({ width: largura, height: altura });
-    canvas.setZoom(largura / 1080);
+    
+    // Ajusta o zoom pra caber na tela
+    function ajustarTamanho() {
+      const wrap = document.getElementById('canvas-wrap');
+      const larguraDisponivel = wrap.clientWidth - 24;
+      const zoom = larguraDisponivel / 1080;
+      canvas.setZoom(zoom);
+      canvas.setWidth(1080 * zoom);
+      canvas.setHeight(1350 * zoom);
+      canvas.renderAll();
+    }
+    
+    window.addEventListener('resize', ajustarTamanho);
+    ajustarTamanho(); // Chama na hora que carrega
     
     canvas.on('selection:created', mostrarBotoes);
     canvas.on('selection:updated', mostrarBotoes);
@@ -102,8 +104,7 @@
         originY: 'center', 
         fontSize: 80, 
         fill: '#000000',
-        fontFamily: 'Arial',
-        editable: true
+        fontFamily: 'Arial'
       });
       canvas.add(texto);
       canvas.setActiveObject(texto);
@@ -115,7 +116,6 @@
     function addImagem(e) {
       const file = e.target.files[0];
       if (!file) return;
-      
       const reader = new FileReader();
       reader.onload = function(f) {
         fabric.Image.fromURL(f.target.result, function(img) {
@@ -131,42 +131,28 @@
     function mudarFundo() {
       const cor = prompt('Digite: preto, branco, vermelho, azul, verde, amarelo', 'branco');
       const cores = {
-        'preto': '#000000',
-        'branco': '#FFFFFF',
-        'vermelho': '#FF0000',
-        'azul': '#0000FF',
-        'verde': '#00FF00',
-        'amarelo': '#FFFF00'
+        'preto': '#000000', 'branco': '#FFFFFF', 'vermelho': '#FF0000',
+        'azul': '#0000FF', 'verde': '#00FF00', 'amarelo': '#FFFF00'
       };
-      if (cores[cor]) {
-        canvas.setBackgroundColor(cores[cor], canvas.renderAll.bind(canvas));
-      }
+      if (cores[cor]) canvas.setBackgroundColor(cores[cor], canvas.renderAll.bind(canvas));
     }
 
     function girar() {
       const obj = canvas.getActiveObject();
-      if (obj) {
-        obj.rotate(obj.angle + 90);
-        canvas.renderAll();
-      }
+      if (obj) { obj.rotate(obj.angle + 90); canvas.renderAll(); }
     }
 
     function mudarOpacidade() {
       const obj = canvas.getActiveObject();
       if (obj) {
         const nova = prompt('Opacidade de 0 a 100:', '100');
-        if (nova!== null) {
-          obj.set('opacity', parseInt(nova) / 100);
-          canvas.renderAll();
-        }
+        if (nova!== null) { obj.set('opacity', parseInt(nova) / 100); canvas.renderAll(); }
       }
     }
 
     function excluir() {
       const obj = canvas.getActiveObject();
-      if (obj) {
-        canvas.remove(obj);
-      }
+      if (obj) canvas.remove(obj);
     }
   </script>
 </body>
