@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.5</title>
+<title>Editor de Foto v6.6</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
@@ -33,35 +33,13 @@ input[type=range]{width:80%}
 </style>
 </head>
 <body>
-<h2>Editor v6.5</h2>
+<h2>Editor v6.6</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
 </div>
 
-<div id="editor-container">
-  <canvas id="canvas"></canvas>
-</div>
-
-<!-- CONTROLES PRINCIPAIS - SEMPRE VISÍVEIS AGORA -->
-<div class="controls">
-  <button onclick="zoomBase(1.2)">Zoom + Base</button>
-  <button onclick="zoomBase(0.8)">Zoom - Base</button>
-  <button onclick="girar()">Girar 90°</button><br>
-  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
-  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
-
-  <input type="text" id="texto" placeholder="Digite seu texto">
-  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
-
-  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
-  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
-
-  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
-  <button onclick="salvar()">Salvar PNG</button>
-</div>
-
-<!-- PAINEL QUE APARECE QUANDO SELECIONA OBJETO -->
+<!-- PAINEL DE EDIÇÃO AGORA FICA AQUI EM CIMA -->
 <div id="painelObjeto">
   <h3 id="tituloObj">Objeto Selecionado</h3>
 
@@ -116,6 +94,27 @@ input[type=range]{width:80%}
   </div>
 
   <button onclick="deletar()" class="btn-laranja">Deletar</button>
+</div>
+
+<div id="editor-container">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="controls">
+  <button onclick="zoomBase(1.2)">Zoom + Base</button>
+  <button onclick="zoomBase(0.8)">Zoom - Base</button>
+  <button onclick="girar()">Girar 90°</button><br>
+  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
+  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
+
+  <input type="text" id="texto" placeholder="Digite seu texto">
+  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
+
+  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
+  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
+
+  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
+  <button onclick="salvar()">Salvar PNG</button>
 </div>
 
 <!-- MENU DE FUNDOS DO CANVAS -->
@@ -233,7 +232,6 @@ uploadOverlay.onchange = e => {
   }
 }
 
-// CANVAS COMEÇA QUADRADO PEQUENO AGORA
 function fitToScreen(){
   let container = document.getElementById('editor-container');
   let maxW = container.offsetWidth;
@@ -244,7 +242,7 @@ function fitToScreen(){
     scale = canvas.width / img.width;
   } else {
     canvas.width = maxW;
-    canvas.height = maxW; // QUADRADO 1:1, NÃO MAIS 1.25
+    canvas.height = maxW;
   }
 }
 
