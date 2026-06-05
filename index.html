@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.1</title>
+<title>Editor de Foto v6.4</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden;padding-bottom:100px}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
@@ -14,6 +14,7 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
 .btn-roxo{background:#8e44ad}
 .btn-laranja{background:#d35400}
 .btn-preto{background:#2c3e50}
+.btn-cinza{background:#7f8c8d}
 .file-wrap{margin:8px 0}
 #painelObjeto{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
 #painelObjeto h3{margin:0 0 10px 0;font-size:16px}
@@ -23,12 +24,16 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
 .cor-picker{display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap}
 .cor{width:30px;height:30px;border-radius:50%;border:2px solid #fff;cursor:pointer}
 #menuFundos{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
+#menuOverlay{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
 .fundo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .fundo-op{width:100%;height:40px;border-radius:6px;border:2px solid #fff;cursor:pointer}
+.slider-grupo{margin:8px 0}
+.slider-grupo label{font-size:12px;display:block;margin-bottom:4px}
+input[type=range]{width:80%}
 </style>
 </head>
 <body>
-<h2>Editor v6.1</h2>
+<h2>Editor v6.4</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -42,7 +47,6 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
 <div id="painelObjeto">
   <h3 id="tituloObj">Objeto Selecionado</h3>
 
-  <!-- Setas de Mover -->
   <div class="seta-move">
     <div></div>
     <button class="seta" onclick="mover(0,-5)">↑</button>
@@ -55,21 +59,25 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
     <div></div>
   </div>
 
-  <!-- Tamanho -->
   <button class="seta" onclick="alterarTamanho(1.1)">Tamanho +</button>
   <button class="seta" onclick="alterarTamanho(0.9)">Tamanho -</button><br>
 
-  <!-- Rotação nova -->
-  <button class="seta" onclick="rotacionar(90)">Girar 90°</button>
-  <button class="seta" onclick="rotacionar(180)">Girar 180°</button>
-  <button class="seta" onclick="rotacionar(360)">Girar 360°</button><br>
+  <button class="seta" onclick="rotacionar(90)">90°</button>
+  <button class="seta" onclick="rotacionar(180)">180°</button>
+  <button class="seta" onclick="rotacionar(-90)">-90°</button><br>
 
-  <!-- Transparência nova -->
-  Opacidade: <input type="range" id="opacidadeSlider" min="0" max="100" value="100" oninput="mudarOpacidade(this.value)"><br>
+  <div class="slider-grupo">
+    <label>Rotação: <span id="rotacaoValor">0</span>°</label>
+    <input type="range" id="rotacaoSlider" min="0" max="360" value="0" oninput="mudarRotacaoLivre(this.value)">
+  </div>
 
-  <!-- Só aparece se for texto -->
+  <div class="slider-grupo">
+    <label>Opacidade: <span id="opacidadeValor">100</span>%</label>
+    <input type="range" id="opacidadeSlider" min="0" max="100" value="100" oninput="mudarOpacidade(this.value)">
+  </div>
+
   <div id="opcoesTexto" style="display:none">
-    <input type="color" id="corTexto" value="#ffffff" onchange="mudarCor(this.value)">
+    <input type="color" id="corTexto" value="#000000" onchange="mudarCor(this.value)">
     <select id="fonteTexto" onchange="mudarFonte(this.value)">
       <option value="Arial">Arial</option>
       <option value="Impact">Impact</option>
@@ -92,18 +100,31 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
   <button onclick="deletar()" class="btn-laranja">Deletar</button>
 </div>
 
-<!-- MENU DE FUNDOS NOVO -->
+<!-- MENU DE FUNDOS DO CANVAS -->
 <div id="menuFundos">
-  <h3>Escolher Fundo</h3>
+  <h3>Fundo do Canvas</h3>
   <div class="fundo-grid" id="gridFundos"></div>
   <button onclick="fecharMenuFundos()" class="btn-roxo">Fechar</button>
+</div>
+
+<!-- MENU DE OVERLAY COLORIDO NOVO -->
+<div id="menuOverlay">
+  <h3>Camada de Cor por Cima</h3>
+  <div class="fundo-grid" id="gridOverlay"></div>
+  <div class="slider-grupo">
+    <label>Opacidade da Camada: <span id="overlayOpacidadeValor">50</span>%</label>
+    <input type="range" id="overlayOpacidade" min="0" max="100" value="50" oninput="mudarOverlayOpacidade(this.value)">
+  </div>
+  <button onclick="removerOverlay()" class="btn-cinza">Remover Camada</button>
+  <button onclick="fecharMenuOverlay()" class="btn-roxo">Fechar</button>
 </div>
 
 <div class="controls">
   <button onclick="zoomBase(1.2)">Zoom + Base</button>
   <button onclick="zoomBase(0.8)">Zoom - Base</button>
-  <button onclick="girar()">Girar 90°</button>
-  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button><br>
+  <button onclick="girar()">Girar 90°</button><br>
+  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
+  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
 
   <input type="text" id="texto" placeholder="Digite seu texto">
   <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
@@ -121,13 +142,14 @@ const ctx = canvas.getContext('2d');
 const painel = document.getElementById('painelObjeto');
 const opcoesTexto = document.getElementById('opcoesTexto');
 const menuFundos = document.getElementById('menuFundos');
+const menuOverlay = document.getElementById('menuOverlay');
 let img = new Image();
 let scale = 1, rotacao = 0;
 let objetos = [];
 let selecionado = null;
 let corFundo = '#FFFFFF';
+let overlay = {ativo: false, cor: '#000000', opacity: 0.5};
 
-// 20 CORES DE FUNDO
 const coresFundo = [
 '#FFFFFF','#000000','#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#1abc9c',
 '#34495e','#e67e22','#95a5a6','#d35400','#27ae60','#2980b9','#8e44ad','#c0392b',
@@ -144,14 +166,43 @@ coresFundo.forEach(cor => {
   gridFundos.appendChild(div);
 });
 
+// Monta grid de overlay
+const gridOverlay = document.getElementById('gridOverlay');
+coresFundo.forEach(cor => {
+  const div = document.createElement('div');
+  div.className = 'fundo-op';
+  div.style.background = cor;
+  div.onclick = () => aplicarOverlay(cor);
+  gridOverlay.appendChild(div);
+});
+
 function aplicarFundo(cor){
   corFundo = cor;
   desenhar();
   fecharMenuFundos();
 }
 
-function abrirMenuFundos(){ menuFundos.style.display = 'block'; }
+function aplicarOverlay(cor){
+  overlay.ativo = true;
+  overlay.cor = cor;
+  desenhar();
+}
+
+function mudarOverlayOpacidade(valor){
+  overlay.opacity = valor / 100;
+  document.getElementById('overlayOpacidadeValor').innerText = valor;
+  desenhar();
+}
+
+function removerOverlay(){
+  overlay.ativo = false;
+  desenhar();
+}
+
+function abrirMenuFundos(){ menuFundos.style.display = 'block'; menuOverlay.style.display = 'none'; }
 function fecharMenuFundos(){ menuFundos.style.display = 'none'; }
+function abrirMenuOverlay(){ menuOverlay.style.display = 'block'; menuFundos.style.display = 'none'; }
+function fecharMenuOverlay(){ menuOverlay.style.display = 'none'; }
 
 upload.onchange = e => {
   const file = e.target.files[0];
@@ -194,14 +245,16 @@ function fitToScreen(){
     scale = canvas.width / img.width;
   } else {
     canvas.width = maxW;
-    canvas.height = maxW * 1.25; // 4:5 padrão Instagram
+    canvas.height = maxW * 1.25;
   }
 }
 
 function desenhar() {
+  // 1. Fundo do canvas
   ctx.fillStyle = corFundo;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
+  // 2. Foto base
   if(img.src){
     ctx.save();
     ctx.translate(canvas.width/2, canvas.height/2);
@@ -212,6 +265,16 @@ function desenhar() {
     ctx.restore();
   }
 
+  // 3. Camada de cor por cima da foto NOVO
+  if(overlay.ativo){
+    ctx.save();
+    ctx.globalAlpha = overlay.opacity;
+    ctx.fillStyle = overlay.cor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  // 4. Textos e imagens por cima de tudo
   objetos.forEach((obj, i) => {
     ctx.save();
     ctx.globalAlpha = obj.opacity || 1;
@@ -222,11 +285,8 @@ function desenhar() {
     if(obj.tipo === 'texto'){
       ctx.font = `bold ${obj.size}px ${obj.fonte}`;
       ctx.fillStyle = obj.cor;
-      ctx.strokeStyle = obj.cor === '#000000'? '#ffffff' : '#000000';
-      ctx.lineWidth = obj.size/12;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.strokeText(obj.txt, 0, 0);
       ctx.fillText(obj.txt, 0, 0);
       if(selecionado === i){
         let w = ctx.measureText(obj.txt).width;
@@ -254,6 +314,9 @@ function selecionar(index){
   selecionado = index;
   painel.style.display = 'block';
   document.getElementById('opacidadeSlider').value = (objetos[index].opacity || 1) * 100;
+  document.getElementById('opacidadeValor').innerText = Math.round((objetos[index].opacity || 1) * 100);
+  document.getElementById('rotacaoSlider').value = objetos[index].rotacao || 0;
+  document.getElementById('rotacaoValor').innerText = Math.round(objetos[index].rotacao || 0);
   if(objetos[index].tipo === 'texto'){
     tituloObj.innerText = 'Editando Texto';
     opcoesTexto.style.display = 'block';
@@ -297,12 +360,22 @@ function alterarTamanho(fator){
 function rotacionar(graus){
   if(selecionado === null) return;
   objetos[selecionado].rotacao = (objetos[selecionado].rotacao + graus) % 360;
+  document.getElementById('rotacaoSlider').value = objetos[selecionado].rotacao;
+  document.getElementById('rotacaoValor').innerText = Math.round(objetos[selecionado].rotacao);
+  desenhar();
+}
+
+function mudarRotacaoLivre(valor){
+  if(selecionado === null) return;
+  objetos[selecionado].rotacao = parseFloat(valor);
+  document.getElementById('rotacaoValor').innerText = Math.round(valor);
   desenhar();
 }
 
 function mudarOpacidade(valor){
   if(selecionado === null) return;
   objetos[selecionado].opacity = valor / 100;
+  document.getElementById('opacidadeValor').innerText = valor;
   desenhar();
 }
 
@@ -356,6 +429,7 @@ function deletar(){
 
 function reset() {
   scale = 1; rotacao = 0; objetos = []; corFundo = '#FFFFFF';
+  overlay = {ativo: false, cor: '#000000', opacity: 0.5};
   desselecionar();
   brilho.value = contraste.value = 100;
   fitToScreen();
@@ -372,7 +446,6 @@ function salvar() {
   if(temp!== null) selecionar(temp);
 }
 
-// Clique pra selecionar
 canvas.onclick = e => {
   let rect = canvas.getBoundingClientRect();
   let x = e.clientX - rect.left;
@@ -394,7 +467,6 @@ canvas.onclick = e => {
   if(!achou) desselecionar();
 }
 
-// Arrastar com dedo
 let isDragging = false, lastX, lastY;
 canvas.ontouchstart = e => {
   if(e.touches.length === 1 && selecionado!== null){
@@ -418,7 +490,6 @@ canvas.ontouchmove = e => {
 }
 canvas.ontouchend = () => { isDragging = false; }
 
-// Inicializa canvas vazio
 fitToScreen();
 desenhar();
 </script>
