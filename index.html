@@ -2,12 +2,12 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.4</title>
+<title>Editor de Foto v6.5</title>
 <style>
-body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden;padding-bottom:100px}
+body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
 canvas{display:block;width:100%;border:2px solid #333;touch-action:none;background:#fff}
-.controls{padding:10px}
+.controls{padding:10px;max-width:500px;margin:0 auto}
 input[type=text], select{padding:8px;width:60%;margin:4px;border-radius:6px;border:none}
 button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:8px;color:#fff;font-size:13px}
 .btn-azul{background:#2980b9}
@@ -33,7 +33,7 @@ input[type=range]{width:80%}
 </style>
 </head>
 <body>
-<h2>Editor v6.4</h2>
+<h2>Editor v6.5</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -41,6 +41,24 @@ input[type=range]{width:80%}
 
 <div id="editor-container">
   <canvas id="canvas"></canvas>
+</div>
+
+<!-- CONTROLES PRINCIPAIS - SEMPRE VISÍVEIS AGORA -->
+<div class="controls">
+  <button onclick="zoomBase(1.2)">Zoom + Base</button>
+  <button onclick="zoomBase(0.8)">Zoom - Base</button>
+  <button onclick="girar()">Girar 90°</button><br>
+  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
+  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
+
+  <input type="text" id="texto" placeholder="Digite seu texto">
+  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
+
+  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
+  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
+
+  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
+  <button onclick="salvar()">Salvar PNG</button>
 </div>
 
 <!-- PAINEL QUE APARECE QUANDO SELECIONA OBJETO -->
@@ -107,7 +125,7 @@ input[type=range]{width:80%}
   <button onclick="fecharMenuFundos()" class="btn-roxo">Fechar</button>
 </div>
 
-<!-- MENU DE OVERLAY COLORIDO NOVO -->
+<!-- MENU DE OVERLAY COLORIDO -->
 <div id="menuOverlay">
   <h3>Camada de Cor por Cima</h3>
   <div class="fundo-grid" id="gridOverlay"></div>
@@ -117,23 +135,6 @@ input[type=range]{width:80%}
   </div>
   <button onclick="removerOverlay()" class="btn-cinza">Remover Camada</button>
   <button onclick="fecharMenuOverlay()" class="btn-roxo">Fechar</button>
-</div>
-
-<div class="controls">
-  <button onclick="zoomBase(1.2)">Zoom + Base</button>
-  <button onclick="zoomBase(0.8)">Zoom - Base</button>
-  <button onclick="girar()">Girar 90°</button><br>
-  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
-  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
-
-  <input type="text" id="texto" placeholder="Digite seu texto">
-  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
-
-  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
-  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
-
-  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
-  <button onclick="salvar()">Salvar PNG</button>
 </div>
 
 <script>
@@ -156,7 +157,6 @@ const coresFundo = [
 '#16a085','#f39c12','#7f8c8d','#2c3e50'
 ];
 
-// Monta grid de fundos
 const gridFundos = document.getElementById('gridFundos');
 coresFundo.forEach(cor => {
   const div = document.createElement('div');
@@ -166,7 +166,6 @@ coresFundo.forEach(cor => {
   gridFundos.appendChild(div);
 });
 
-// Monta grid de overlay
 const gridOverlay = document.getElementById('gridOverlay');
 coresFundo.forEach(cor => {
   const div = document.createElement('div');
@@ -208,7 +207,6 @@ upload.onchange = e => {
   const file = e.target.files[0];
   img.src = URL.createObjectURL(file);
   img.onload = () => {
-    reset();
     fitToScreen();
     desenhar();
   }
@@ -235,6 +233,7 @@ uploadOverlay.onchange = e => {
   }
 }
 
+// CANVAS COMEÇA QUADRADO PEQUENO AGORA
 function fitToScreen(){
   let container = document.getElementById('editor-container');
   let maxW = container.offsetWidth;
@@ -245,16 +244,14 @@ function fitToScreen(){
     scale = canvas.width / img.width;
   } else {
     canvas.width = maxW;
-    canvas.height = maxW * 1.25;
+    canvas.height = maxW; // QUADRADO 1:1, NÃO MAIS 1.25
   }
 }
 
 function desenhar() {
-  // 1. Fundo do canvas
   ctx.fillStyle = corFundo;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // 2. Foto base
   if(img.src){
     ctx.save();
     ctx.translate(canvas.width/2, canvas.height/2);
@@ -265,7 +262,6 @@ function desenhar() {
     ctx.restore();
   }
 
-  // 3. Camada de cor por cima da foto NOVO
   if(overlay.ativo){
     ctx.save();
     ctx.globalAlpha = overlay.opacity;
@@ -274,7 +270,6 @@ function desenhar() {
     ctx.restore();
   }
 
-  // 4. Textos e imagens por cima de tudo
   objetos.forEach((obj, i) => {
     ctx.save();
     ctx.globalAlpha = obj.opacity || 1;
@@ -430,6 +425,7 @@ function deletar(){
 function reset() {
   scale = 1; rotacao = 0; objetos = []; corFundo = '#FFFFFF';
   overlay = {ativo: false, cor: '#000000', opacity: 0.5};
+  img = new Image();
   desselecionar();
   brilho.value = contraste.value = 100;
   fitToScreen();
