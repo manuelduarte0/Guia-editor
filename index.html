@@ -2,11 +2,11 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6</title>
+<title>Editor de Foto v6.1</title>
 <style>
-body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
+body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden;padding-bottom:100px}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
-canvas{display:block;width:100%;border:2px solid #333;touch-action:none;background:#000}
+canvas{display:block;width:100%;border:2px solid #333;touch-action:none;background:#fff}
 .controls{padding:10px}
 input[type=text], select{padding:8px;width:60%;margin:4px;border-radius:6px;border:none}
 button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:8px;color:#fff;font-size:13px}
@@ -28,7 +28,7 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
 </style>
 </head>
 <body>
-<h2>Editor v6</h2>
+<h2>Editor v6.1</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -125,11 +125,11 @@ let img = new Image();
 let scale = 1, rotacao = 0;
 let objetos = [];
 let selecionado = null;
-let corFundo = '#000000';
+let corFundo = '#FFFFFF';
 
 // 20 CORES DE FUNDO
 const coresFundo = [
-'#000000','#FFFFFF','#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#1abc9c',
+'#FFFFFF','#000000','#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#1abc9c',
 '#34495e','#e67e22','#95a5a6','#d35400','#27ae60','#2980b9','#8e44ad','#c0392b',
 '#16a085','#f39c12','#7f8c8d','#2c3e50'
 ];
@@ -338,7 +338,7 @@ function addTexto() {
     size: 40,
     scale: 1,
     rotacao: 0,
-    cor: '#ffffff',
+    cor: '#000000',
     fonte: 'Arial',
     opacity: 1
   });
@@ -355,7 +355,7 @@ function deletar(){
 }
 
 function reset() {
-  scale = 1; rotacao = 0; objetos = []; corFundo = '#000000';
+  scale = 1; rotacao = 0; objetos = []; corFundo = '#FFFFFF';
   desselecionar();
   brilho.value = contraste.value = 100;
   fitToScreen();
