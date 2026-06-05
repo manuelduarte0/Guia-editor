@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.6</title>
+<title>Editor de Foto v6.7</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
@@ -33,13 +33,13 @@ input[type=range]{width:80%}
 </style>
 </head>
 <body>
-<h2>Editor v6.6</h2>
+<h2>Editor v6.7</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
 </div>
 
-<!-- PAINEL DE EDIÇÃO AGORA FICA AQUI EM CIMA -->
+<!-- PAINEL DE EDIÇÃO FICA AQUI NO TOPO MESMO -->
 <div id="painelObjeto">
   <h3 id="tituloObj">Objeto Selecionado</h3>
 
@@ -100,6 +100,7 @@ input[type=range]{width:80%}
   <canvas id="canvas"></canvas>
 </div>
 
+<!-- CONTROLES GERAIS AGORA VÊM DEPOIS DO CANVAS -->
 <div class="controls">
   <button onclick="zoomBase(1.2)">Zoom + Base</button>
   <button onclick="zoomBase(0.8)">Zoom - Base</button>
