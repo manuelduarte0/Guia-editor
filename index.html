@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.21</title>
+<title>Editor de Foto v6.22</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:8px auto}
@@ -46,7 +46,7 @@ input[type=range]{width:75%;height:15px}
 </style>
 </head>
 <body>
-<h2 style="margin:6px 0;font-size:18px">Editor v6.21</h2>
+<h2 style="margin:6px 0;font-size:18px">Editor v6.22</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -332,13 +332,13 @@ function desenhar() {
         ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
         ctx.restore();
       }
-      
+
       ctx.font = `bold ${obj.size}px ${obj.fonte}`;
       ctx.fillStyle = obj.cor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(obj.txt, 0, 0);
-      
+
       if(selecionado === i){
         ctx.strokeStyle = '#2980b9';
         ctx.lineWidth = 2;
@@ -438,7 +438,7 @@ function alterarTamanho(fator){
   desenhar();
 }
 
-// AGORA L+ L- MUDA O TEXTO TAMBÉM
+// L+ L- MECHE NO TEXTO TAMBÉM
 function alterarLargura(fator){
   if(selecionado === null) return;
   let obj = objetos[selecionado];
@@ -447,21 +447,27 @@ function alterarLargura(fator){
     if(obj.w < 20) obj.w = 20;
   } else if(obj.tipo === 'texto'){
     obj.w *= fator;
-    obj.size *= fator; // TEXTO DIMINUI JUNTO
+    obj.size *= fator;
     if(obj.size < 10) obj.size = 10;
     if(obj.w < 20) obj.w = 20;
   }
   desenhar();
 }
 
+// A+ A- MECHE NO TEXTO TAMBÉM
 function alterarAltura(fator){
   if(selecionado === null) return;
   let obj = objetos[selecionado];
-  if(obj.tipo === 'rect' || obj.tipo === 'texto'){
+  if(obj.tipo === 'rect'){
     obj.h *= fator;
     if(obj.h < 20) obj.h = 20;
-    desenhar();
+  } else if(obj.tipo === 'texto'){
+    obj.h *= fator;
+    obj.size *= fator; // TEXTO AUMENTA/DIMINUI JUNTO
+    if(obj.size < 10) obj.size = 10;
+    if(obj.h < 20) obj.h = 20;
   }
+  desenhar();
 }
 
 function rotacionar(graus){
