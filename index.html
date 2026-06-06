@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.11</title>
+<title>Editor de Foto v6.12</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
@@ -16,39 +16,24 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
 .btn-preto{background:#2c3e50}
 .btn-cinza{background:#7f8c8d}
 .file-wrap{margin:8px 0}
-
-/* PAINEL COMPACTO COM SCROLL */
-#painelSetas{
-  display:none;
-  background:#1e1e1e;
-  padding:8px;
-  margin:8px auto;
-  border-radius:12px;
-  width:95%;
-  max-width:500px;
-  border:2px solid #3498db;
-  max-height:60vh;
-  overflow-y:auto;
-}
-#painelSetas h3{margin:0 0 8px 0;font-size:15px;color:#3498db}
-.seta{background:#34495e;font-size:16px;padding:8px 12px}
-.seta-move{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:160px;margin:8px auto}
-.seta-move button{padding:10px}
-.cor-picker{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap}
-.cor{width:28px;height:28px;border-radius:50%;border:2px solid #fff;cursor:pointer}
+#painelObjeto{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
+#painelObjeto h3{margin:0 0 10px 0;font-size:16px}
+.seta{background:#34495e;font-size:18px;padding:8px 14px}
+.seta-move{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:150px;margin:8px auto}
+.seta-move button{padding:12px}
+.cor-picker{display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.cor{width:30px;height:30px;border-radius:50%;border:2px solid #fff;cursor:pointer}
 #menuFundos{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
 #menuOverlay{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
 .fundo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .fundo-op{width:100%;height:40px;border-radius:6px;border:2px solid #fff;cursor:pointer}
 .slider-grupo{margin:8px 0}
 .slider-grupo label{font-size:12px;display:block;margin-bottom:4px}
-input[type=range]{width:85%}
-#controlesNormais{display:block}
+input[type=range]{width:80%}
 </style>
 </head>
 <body>
-<h2>Editor v6.11</h2>
-
+<h2>Editor v6.12</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -58,10 +43,11 @@ input[type=range]{width:85%}
   <canvas id="canvas"></canvas>
 </div>
 
-<!-- PAINEL DE SETAS - AGORA COMPACTO -->
-<div id="painelSetas">
-  <h3 id="tituloObj">Editando Texto</h3>
+<!-- PAINEL QUE APARECE QUANDO SELECIONA OBJETO - IGUAL V5 -->
+<div id="painelObjeto">
+  <h3 id="tituloObj">Objeto Selecionado</h3>
 
+  <!-- Setas de Mover -->
   <div class="seta-move">
     <div></div>
     <button class="seta" onclick="mover(0,-5)">↑</button>
@@ -74,12 +60,16 @@ input[type=range]{width:85%}
     <div></div>
   </div>
 
+  <!-- Tamanho -->
   <button class="seta" onclick="alterarTamanho(1.1)">Tamanho +</button>
-  <button class="seta" onclick="alterarTamanho(0.9)">Tamanho -</button>
+  <button class="seta" onclick="alterarTamanho(0.9)">Tamanho -</button><br>
+
+  <!-- NOVO: Rotação -->
   <button class="seta" onclick="rotacionar(90)">90°</button>
   <button class="seta" onclick="rotacionar(180)">180°</button>
   <button class="seta" onclick="rotacionar(-90)">-90°</button><br>
 
+  <!-- NOVO: Sliders -->
   <div class="slider-grupo">
     <label>Rotação: <span id="rotacaoValor">0</span>°</label>
     <input type="range" id="rotacaoSlider" min="0" max="360" value="0" oninput="mudarRotacaoLivre(this.value)">
@@ -90,8 +80,9 @@ input[type=range]{width:85%}
     <input type="range" id="opacidadeSlider" min="0" max="100" value="100" oninput="mudarOpacidade(this.value)">
   </div>
 
+  <!-- Só aparece se for texto -->
   <div id="opcoesTexto" style="display:none">
-    <input type="color" id="corTexto" value="#000000" onchange="mudarCor(this.value)">
+    <input type="color" id="corTexto" value="#ffffff" onchange="mudarCor(this.value)">
     <select id="fonteTexto" onchange="mudarFonte(this.value)">
       <option value="Arial">Arial</option>
       <option value="Impact">Impact</option>
@@ -112,11 +103,9 @@ input[type=range]{width:85%}
   </div>
 
   <button onclick="deletar()" class="btn-laranja">Deletar</button>
-  <button onclick="desselecionar()" class="btn-roxo">Fechar</button>
 </div>
 
-<!-- CONTROLES NORMAIS - SEMPRE VISÍVEIS QUANDO SEM SELEÇÃO -->
-<div class="controls" id="controlesNormais">
+<div class="controls">
   <button onclick="zoomBase(1.2)">Zoom + Base</button>
   <button onclick="zoomBase(0.8)">Zoom - Base</button>
   <button onclick="girar()">Girar 90°</button><br>
@@ -153,8 +142,7 @@ input[type=range]{width:85%}
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const painelSetas = document.getElementById('painelSetas');
-const controlesNormais = document.getElementById('controlesNormais');
+const painel = document.getElementById('painelObjeto');
 const opcoesTexto = document.getElementById('opcoesTexto');
 const menuFundos = document.getElementById('menuFundos');
 const menuOverlay = document.getElementById('menuOverlay');
@@ -221,6 +209,7 @@ upload.onchange = e => {
   const file = e.target.files[0];
   img.src = URL.createObjectURL(file);
   img.onload = () => {
+    reset();
     fitToScreen();
     desenhar();
   }
@@ -264,7 +253,7 @@ function fitToScreen(){
 function desenhar() {
   ctx.fillStyle = corFundo;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
+
   if(img.src){
     ctx.save();
     ctx.translate(canvas.width/2, canvas.height/2);
@@ -320,8 +309,7 @@ function desenhar() {
 
 function selecionar(index){
   selecionado = index;
-  painelSetas.style.display = 'block';
-  controlesNormais.style.display = 'none';
+  painel.style.display = 'block';
   document.getElementById('opacidadeSlider').value = (objetos[index].opacity || 1) * 100;
   document.getElementById('opacidadeValor').innerText = Math.round((objetos[index].opacity || 1) * 100);
   document.getElementById('rotacaoSlider').value = objetos[index].rotacao || 0;
@@ -340,8 +328,7 @@ function selecionar(index){
 
 function desselecionar(){
   selecionado = null;
-  painelSetas.style.display = 'none';
-  controlesNormais.style.display = 'block';
+  painel.style.display = 'none';
   desenhar();
 }
 
@@ -421,7 +408,7 @@ function addTexto() {
     size: 40,
     scale: 1,
     rotacao: 0,
-    cor: '#000000',
+    cor: '#ffffff',
     fonte: 'Arial',
     opacity: 1
   });
@@ -443,7 +430,7 @@ function reset() {
   img = new Image();
   desselecionar();
   brilho.value = contraste.value = 100;
-  fitToScreen();
+  if(img.src) fitToScreen();
   desenhar();
 }
 
@@ -457,6 +444,7 @@ function salvar() {
   if(temp!== null) selecionar(temp);
 }
 
+// Clique pra selecionar
 canvas.onclick = e => {
   let rect = canvas.getBoundingClientRect();
   let x = e.clientX - rect.left;
@@ -478,6 +466,7 @@ canvas.onclick = e => {
   if(!achou) desselecionar();
 }
 
+// Arrastar com dedo ainda funciona
 let isDragging = false, lastX, lastY;
 canvas.ontouchstart = e => {
   if(e.touches.length === 1 && selecionado!== null){
