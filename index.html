@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.19</title>
+<title>Editor de Foto v6.21</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:8px auto}
@@ -46,7 +46,7 @@ input[type=range]{width:75%;height:15px}
 </style>
 </head>
 <body>
-<h2 style="margin:6px 0;font-size:18px">Editor v6.19</h2>
+<h2 style="margin:6px 0;font-size:18px">Editor v6.21</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -75,7 +75,6 @@ input[type=range]{width:75%;height:15px}
     <button class="seta" onclick="rotacionar(-90)">-90°</button>
   </div>
 
-  <!-- L+ L- A+ A- AGORA APARECE PRA TEXTO E RETÂNGULO -->
   <div id="opcoesTamanho" style="display:none">
     <div class="linha-botoes">
       <button class="seta" onclick="alterarLargura(1.1)">L+</button>
@@ -320,13 +319,12 @@ function desenhar() {
 
   objetos.forEach((obj, i) => {
     ctx.save();
-    ctx.globalAlpha = obj.opacity || 1;
+    ctx.globalAlpha = obj.opacity;
     ctx.translate(obj.x, obj.y);
     ctx.rotate(obj.rotacao * Math.PI / 180);
     ctx.scale(obj.scale, obj.scale);
 
     if(obj.tipo === 'texto'){
-      // Caixa sempre visível quando selecionado
       if(selecionado === i || obj.fundoOpacity > 0){
         ctx.save();
         ctx.globalAlpha = obj.fundoOpacity;
@@ -375,29 +373,30 @@ function desenhar() {
 function selecionar(index){
   selecionado = index;
   painel.style.display = 'block';
-  document.getElementById('opacidadeSlider').value = (objetos[index].opacity || 1) * 100;
-  document.getElementById('opacidadeValor').innerText = Math.round((objetos[index].opacity || 1) * 100);
-  document.getElementById('rotacaoSlider').value = objetos[index].rotacao || 0;
-  document.getElementById('rotacaoValor').innerText = Math.round(objetos[index].rotacao || 0);
+  let obj = objetos[index];
+  document.getElementById('opacidadeSlider').value = obj.opacity * 100;
+  document.getElementById('opacidadeValor').innerText = Math.round(obj.opacity * 100);
+  document.getElementById('rotacaoSlider').value = obj.rotacao;
+  document.getElementById('rotacaoValor').innerText = Math.round(obj.rotacao);
 
   opcoesTexto.style.display = 'none';
   opcoesRetangulo.style.display = 'none';
   opcoesTamanho.style.display = 'none';
 
-  if(objetos[index].tipo === 'texto'){
+  if(obj.tipo === 'texto'){
     tituloObj.innerText = 'Editando Texto';
     opcoesTexto.style.display = 'block';
-    opcoesTamanho.style.display = 'block'; // L+ L- A+ A- pra texto
-    corTexto.value = objetos[index].cor;
-    fonteTexto.value = objetos[index].fonte;
-    corFundoTexto.value = objetos[index].corFundo;
-    document.getElementById('fundoOpacidadeSlider').value = (objetos[index].fundoOpacity || 0) * 100;
-    document.getElementById('fundoOpacidadeValor').innerText = Math.round((objetos[index].fundoOpacity || 0) * 100);
-  } else if(objetos[index].tipo === 'rect'){
+    opcoesTamanho.style.display = 'block';
+    corTexto.value = obj.cor;
+    fonteTexto.value = obj.fonte;
+    corFundoTexto.value = obj.corFundo;
+    document.getElementById('fundoOpacidadeSlider').value = obj.fundoOpacity * 100;
+    document.getElementById('fundoOpacidadeValor').innerText = Math.round(obj.fundoOpacity * 100);
+  } else if(obj.tipo === 'rect'){
     tituloObj.innerText = 'Editando Retângulo';
     opcoesRetangulo.style.display = 'block';
-    opcoesTamanho.style.display = 'block'; // L+ L- A+ A- pra retângulo
-    corRetangulo.value = objetos[index].cor;
+    opcoesTamanho.style.display = 'block';
+    corRetangulo.value = obj.cor;
   } else {
     tituloObj.innerText = 'Editando Imagem';
   }
@@ -439,14 +438,20 @@ function alterarTamanho(fator){
   desenhar();
 }
 
+// AGORA L+ L- MUDA O TEXTO TAMBÉM
 function alterarLargura(fator){
   if(selecionado === null) return;
   let obj = objetos[selecionado];
-  if(obj.tipo === 'rect' || obj.tipo === 'texto'){
+  if(obj.tipo === 'rect'){
     obj.w *= fator;
     if(obj.w < 20) obj.w = 20;
-    desenhar();
+  } else if(obj.tipo === 'texto'){
+    obj.w *= fator;
+    obj.size *= fator; // TEXTO DIMINUI JUNTO
+    if(obj.size < 10) obj.size = 10;
+    if(obj.w < 20) obj.w = 20;
   }
+  desenhar();
 }
 
 function alterarAltura(fator){
