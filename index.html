@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.9</title>
+<title>Editor de Foto v6.8</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:10px auto}
@@ -16,86 +16,27 @@ button{background:#27ae60;border:none;padding:9px 10px;margin:3px;border-radius:
 .btn-preto{background:#2c3e50}
 .btn-cinza{background:#7f8c8d}
 .file-wrap{margin:8px 0}
-
-/* PAINEL FLUTUANTE NO MEIO DA TELA */
-#painelObjeto{
-  display:none;
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#1e1e1e;
-  padding:16px;
-  border-radius:16px;
-  width:90%;
-  max-width:400px;
-  z-index:1000;
-  box-shadow:0 10px 40px rgba(0,0,0,0.8);
-  border:2px solid #2980b9;
-}
-#painelObjeto h3{margin:0 0 12px 0;font-size:18px;color:#3498db}
-.seta{background:#34495e;font-size:18px;padding:10px 16px}
-.seta-move{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:180px;margin:10px auto}
-.seta-move button{padding:14px}
-.cor-picker{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap}
-.cor{width:35px;height:35px;border-radius:50%;border:2px solid #fff;cursor:pointer}
+#painelObjeto{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px;position:sticky;top:5px;z-index:999}
+#painelObjeto h3{margin:0 0 10px 0;font-size:16px}
+.seta{background:#34495e;font-size:18px;padding:8px 14px}
+.seta-move{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:150px;margin:8px auto}
+.seta-move button{padding:12px}
+.cor-picker{display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.cor{width:30px;height:30px;border-radius:50%;border:2px solid #fff;cursor:pointer}
 #menuFundos{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
 #menuOverlay{display:none;background:#1e1e1e;padding:12px;margin:10px auto;border-radius:12px;width:95%;max-width:500px}
 .fundo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .fundo-op{width:100%;height:40px;border-radius:6px;border:2px solid #fff;cursor:pointer}
-.slider-grupo{margin:10px 0}
-.slider-grupo label{font-size:13px;display:block;margin-bottom:5px}
-input[type=range]{width:85%}
-.btn-fechar{background:#c0392b;position:absolute;top:8px;right:8px;padding:6px 10px;font-size:16px}
-
-/* BACKDROP ESCURO QUANDO PAINEL ABRE */
-#backdrop{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.7);
-  z-index:999;
-}
+.slider-grupo{margin:8px 0}
+.slider-grupo label{font-size:12px;display:block;margin-bottom:4px}
+input[type=range]{width:80%}
 </style>
 </head>
 <body>
-<h2>Editor v6.9</h2>
+<h2>Editor v6.8</h2>
 
-<!-- BACKDROP PRA ESCURECER FUNDO -->
-<div id="backdrop" onclick="desselecionar()"></div>
-
-<div class="file-wrap">
-  <input type="file" id="upload" accept="image/*"> Foto base<br>
-  <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
-</div>
-
-<div id="editor-container">
-  <canvas id="canvas"></canvas>
-</div>
-
-<div class="controls">
-  <button onclick="zoomBase(1.2)">Zoom + Base</button>
-  <button onclick="zoomBase(0.8)">Zoom - Base</button>
-  <button onclick="girar()">Girar 90°</button><br>
-  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
-  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
-
-  <input type="text" id="texto" placeholder="Digite seu texto">
-  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
-
-  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
-  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
-
-  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
-  <button onclick="salvar()">Salvar PNG</button>
-</div>
-
-<!-- PAINEL FLUTUANTE NO MEIO -->
+<!-- PAINEL DE EDIÇÃO AGORA É A PRIMEIRA COISA -->
 <div id="painelObjeto">
-  <button class="btn-fechar" onclick="desselecionar()">✕</button>
   <h3 id="tituloObj">Objeto Selecionado</h3>
 
   <div class="seta-move">
@@ -151,6 +92,32 @@ input[type=range]{width:85%}
   <button onclick="deletar()" class="btn-laranja">Deletar</button>
 </div>
 
+<div class="file-wrap">
+  <input type="file" id="upload" accept="image/*"> Foto base<br>
+  <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
+</div>
+
+<div id="editor-container">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="controls">
+  <button onclick="zoomBase(1.2)">Zoom + Base</button>
+  <button onclick="zoomBase(0.8)">Zoom - Base</button>
+  <button onclick="girar()">Girar 90°</button><br>
+  <button onclick="abrirMenuFundos()" class="btn-preto">Fundo</button>
+  <button onclick="abrirMenuOverlay()" class="btn-cinza">Camada Cor</button><br>
+
+  <input type="text" id="texto" placeholder="Digite seu texto">
+  <button onclick="addTexto()" class="btn-azul">Add Texto</button><br>
+
+  Brilho <input type="range" id="brilho" min="0" max="200" value="100" oninput="desenhar()"><br>
+  Contraste <input type="range" id="contraste" min="0" max="200" value="100" oninput="desenhar()"><br>
+
+  <button onclick="reset()" class="btn-roxo">Resetar Tudo</button>
+  <button onclick="salvar()">Salvar PNG</button>
+</div>
+
 <div id="menuFundos">
   <h3>Fundo do Canvas</h3>
   <div class="fundo-grid" id="gridFundos"></div>
@@ -172,7 +139,6 @@ input[type=range]{width:85%}
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const painel = document.getElementById('painelObjeto');
-const backdrop = document.getElementById('backdrop');
 const opcoesTexto = document.getElementById('opcoesTexto');
 const menuFundos = document.getElementById('menuFundos');
 const menuOverlay = document.getElementById('menuOverlay');
@@ -339,7 +305,6 @@ function desenhar() {
 function selecionar(index){
   selecionado = index;
   painel.style.display = 'block';
-  backdrop.style.display = 'block';
   document.getElementById('opacidadeSlider').value = (objetos[index].opacity || 1) * 100;
   document.getElementById('opacidadeValor').innerText = Math.round((objetos[index].opacity || 1) * 100);
   document.getElementById('rotacaoSlider').value = objetos[index].rotacao || 0;
@@ -359,7 +324,6 @@ function selecionar(index){
 function desselecionar(){
   selecionado = null;
   painel.style.display = 'none';
-  backdrop.style.display = 'none';
   desenhar();
 }
 
