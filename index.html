@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.15</title>
+<title>Editor de Foto v6.17</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:8px auto}
@@ -18,7 +18,6 @@ button{background:#27ae60;border:none;padding:7px 8px;margin:2px;border-radius:6
 .btn-amarelo{background:#f39c12}
 .file-wrap{margin:6px 0;font-size:12px}
 
-/* PAINEL ULTRA COMPACTO */
 #painelObjeto{
   display:none;
   background:#1e1e1e;
@@ -47,7 +46,7 @@ input[type=range]{width:75%;height:15px}
 </style>
 </head>
 <body>
-<h2 style="margin:6px 0;font-size:18px">Editor v6.15</h2>
+<h2 style="margin:6px 0;font-size:18px">Editor v6.17</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -57,10 +56,9 @@ input[type=range]{width:75%;height:15px}
   <canvas id="canvas"></canvas>
 </div>
 
-<!-- PAINEL ULTRA COMPACTO -->
 <div id="painelObjeto">
   <h3 id="tituloObj">Objeto Selecionado</h3>
-  
+
   <div class="linha-botoes">
     <button class="seta" onclick="mover(0,-5)">↑</button>
     <button class="seta" onclick="mover(-5,0)">←</button>
@@ -83,7 +81,7 @@ input[type=range]{width:75%;height:15px}
     <input type="range" id="opacidadeSlider" min="0" max="100" value="100" oninput="mudarOpacidade(this.value)" style="width:48%">
   </div>
 
-  <!-- Opções de Texto -->
+  <!-- Opções de Texto COM L+ L- A+ A- -->
   <div id="opcoesTexto" style="display:none">
     <div class="linha-botoes">
       <input type="color" id="corTexto" value="#000000" onchange="mudarCor(this.value)">
@@ -96,6 +94,17 @@ input[type=range]{width:75%;height:15px}
         <option value="Verdana">Verdana</option>
       </select>
     </div>
+    <div class="linha-botoes">
+      <input type="color" id="corFundoTexto" value="#ffffff" onchange="mudarCorFundoTexto(this.value)" title="Cor do fundo">
+      <button class="seta" onclick="alterarLargura(1.1)">L+</button>
+      <button class="seta" onclick="alterarLargura(0.9)">L-</button>
+      <button class="seta" onclick="alterarAltura(1.1)">A+</button>
+      <button class="seta" onclick="alterarAltura(0.9)">A-</button>
+    </div>
+    <div class="slider-grupo">
+      <label>Opacidade Fundo: <span id="fundoOpacidadeValor">0</span>%</label>
+      <input type="range" id="fundoOpacidadeSlider" min="0" max="100" value="0" oninput="mudarFundoOpacidade(this.value)">
+    </div>
     <div class="cor-picker">
       <div class="cor" style="background:#ffffff" onclick="mudarCor('#ffffff')"></div>
       <div class="cor" style="background:#000000" onclick="mudarCor('#000000')"></div>
@@ -107,7 +116,7 @@ input[type=range]{width:75%;height:15px}
     </div>
   </div>
 
-  <!-- NOVO: Opções de Retângulo -->
+  <!-- Opções de Retângulo -->
   <div id="opcoesRetangulo" style="display:none">
     <div class="linha-botoes">
       <input type="color" id="corRetangulo" value="#e74c3c" onchange="mudarCor(this.value)">
@@ -263,10 +272,20 @@ uploadOverlay.onchange = e => {
 function fitToScreen(){
   let container = document.getElementById('editor-container');
   let maxW = container.offsetWidth;
+  let maxH = window.innerHeight * 0.6;
+
   if(img.width > 0){
     let ratio = img.width / img.height;
-    canvas.width = maxW;
-    canvas.height = maxW / ratio;
+    let calcW = maxW;
+    let calcH = maxW / ratio;
+
+    if(calcH > maxH){
+      calcH = maxH;
+      calcW = maxH * ratio;
+    }
+
+    canvas.width = calcW;
+    canvas.height = calcH;
     scale = canvas.width / img.width;
   } else {
     canvas.width = maxW;
@@ -304,17 +323,26 @@ function desenhar() {
     ctx.scale(obj.scale, obj.scale);
 
     if(obj.tipo === 'texto'){
+      // Desenha fundo do texto se tiver opacidade
+      if(obj.fundoOpacity > 0){
+        ctx.save();
+        ctx.globalAlpha = obj.fundoOpacity;
+        ctx.fillStyle = obj.corFundo;
+        ctx.fillRect(-obj.w/2, -obj.h/2, obj.w, obj.h);
+        ctx.restore();
+      }
+      
       ctx.font = `bold ${obj.size}px ${obj.fonte}`;
       ctx.fillStyle = obj.cor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(obj.txt, 0, 0);
+      
       if(selecionado === i){
-        let w = ctx.measureText(obj.txt).width;
         ctx.strokeStyle = '#2980b9';
         ctx.lineWidth = 2;
         ctx.setLineDash([5,5]);
-        ctx.strokeRect(-w/2-8, -obj.size/2-8, w+16, obj.size+16);
+        ctx.strokeRect(-obj.w/2-3, -obj.h/2-3, obj.w+6, obj.h+6);
         ctx.setLineDash([]);
       }
     } else if(obj.tipo === 'img'){
@@ -348,15 +376,18 @@ function selecionar(index){
   document.getElementById('opacidadeValor').innerText = Math.round((objetos[index].opacity || 1) * 100);
   document.getElementById('rotacaoSlider').value = objetos[index].rotacao || 0;
   document.getElementById('rotacaoValor').innerText = Math.round(objetos[index].rotacao || 0);
-  
+
   opcoesTexto.style.display = 'none';
   opcoesRetangulo.style.display = 'none';
-  
+
   if(objetos[index].tipo === 'texto'){
     tituloObj.innerText = 'Editando Texto';
     opcoesTexto.style.display = 'block';
     corTexto.value = objetos[index].cor;
     fonteTexto.value = objetos[index].fonte;
+    corFundoTexto.value = objetos[index].corFundo;
+    document.getElementById('fundoOpacidadeSlider').value = (objetos[index].fundoOpacity || 0) * 100;
+    document.getElementById('fundoOpacidadeValor').innerText = Math.round((objetos[index].fundoOpacity || 0) * 100);
   } else if(objetos[index].tipo === 'rect'){
     tituloObj.innerText = 'Editando Retângulo';
     opcoesRetangulo.style.display = 'block';
@@ -387,6 +418,9 @@ function alterarTamanho(fator){
     obj.size *= fator;
     if(obj.size < 10) obj.size = 10;
     if(obj.size > 200) obj.size = 200;
+    // Ajusta caixa junto
+    obj.w *= fator;
+    obj.h *= fator;
   } else if(obj.tipo === 'rect'){
     obj.w *= fator;
     obj.h *= fator;
@@ -401,17 +435,23 @@ function alterarTamanho(fator){
 }
 
 function alterarLargura(fator){
-  if(selecionado === null || objetos[selecionado].tipo!== 'rect') return;
-  objetos[selecionado].w *= fator;
-  if(objetos[selecionado].w < 10) objetos[selecionado].w = 10;
-  desenhar();
+  if(selecionado === null) return;
+  let obj = objetos[selecionado];
+  if(obj.tipo === 'rect' || obj.tipo === 'texto'){
+    obj.w *= fator;
+    if(obj.w < 20) obj.w = 20;
+    desenhar();
+  }
 }
 
 function alterarAltura(fator){
-  if(selecionado === null || objetos[selecionado].tipo!== 'rect') return;
-  objetos[selecionado].h *= fator;
-  if(objetos[selecionado].h < 10) objetos[selecionado].h = 10;
-  desenhar();
+  if(selecionado === null) return;
+  let obj = objetos[selecionado];
+  if(obj.tipo === 'rect' || obj.tipo === 'texto'){
+    obj.h *= fator;
+    if(obj.h < 20) obj.h = 20;
+    desenhar();
+  }
 }
 
 function rotacionar(graus){
@@ -444,6 +484,19 @@ function mudarCor(cor){
   }
 }
 
+function mudarCorFundoTexto(cor){
+  if(selecionado === null || objetos[selecionado].tipo!== 'texto') return;
+  objetos[selecionado].corFundo = cor;
+  desenhar();
+}
+
+function mudarFundoOpacidade(valor){
+  if(selecionado === null || objetos[selecionado].tipo!== 'texto') return;
+  objetos[selecionado].fundoOpacity = valor / 100;
+  document.getElementById('fundoOpacidadeValor').innerText = valor;
+  desenhar();
+}
+
 function mudarFonte(fonte){
   if(selecionado === null || objetos[selecionado].tipo!== 'texto') return;
   objetos[selecionado].fonte = fonte;
@@ -462,15 +515,21 @@ function girar() {
 
 function addTexto() {
   if(!texto.value) return;
+  ctx.font = `bold 40px Arial`;
+  let larguraTexto = ctx.measureText(texto.value).width;
   objetos.push({
     tipo: 'texto',
     txt: texto.value,
     x: canvas.width/2,
     y: canvas.height/2,
     size: 40,
+    w: larguraTexto + 20,
+    h: 60,
     scale: 1,
     rotacao: 0,
     cor: '#000000',
+    corFundo: '#ffffff',
+    fundoOpacity: 0,
     fonte: 'Arial',
     opacity: 1
   });
@@ -479,7 +538,6 @@ function addTexto() {
   desenhar();
 }
 
-// NOVO: Adicionar Retângulo
 function addRetangulo() {
   objetos.push({
     tipo: 'rect',
@@ -532,11 +590,10 @@ canvas.onclick = e => {
   for(let i = objetos.length - 1; i >= 0; i--){
     let obj = objetos[i];
     let w, h;
-    
+
     if(obj.tipo === 'texto'){
-      ctx.font = `bold ${obj.size * obj.scale}px ${obj.fonte}`;
-      w = ctx.measureText(obj.txt).width;
-      h = obj.size * obj.scale;
+      w = obj.w * obj.scale;
+      h = obj.h * obj.scale;
     } else if(obj.tipo === 'img'){
       w = obj.w * obj.scale;
       h = obj.h * obj.scale;
