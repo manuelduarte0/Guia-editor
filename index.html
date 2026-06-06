@@ -2,11 +2,11 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Editor de Foto v6.17</title>
+<title>Editor de Foto v6.19</title>
 <style>
 body{font-family:Arial;margin:0;background:#111;color:#fff;text-align:center;overflow-x:hidden}
 #editor-container{position:relative;width:95vw;max-width:500px;margin:8px auto}
-canvas{display:block;width:100%;border:2px solid #333;touch-action:none;background:#fff}
+canvas{display:block;width:100%;max-height:70vh;border:2px solid #333;touch-action:none;background:#fff}
 .controls{padding:8px;max-width:500px;margin:0 auto}
 input[type=text], select{padding:6px;width:55%;margin:3px;border-radius:6px;border:none;font-size:12px}
 button{background:#27ae60;border:none;padding:7px 8px;margin:2px;border-radius:6px;color:#fff;font-size:12px}
@@ -46,7 +46,7 @@ input[type=range]{width:75%;height:15px}
 </style>
 </head>
 <body>
-<h2 style="margin:6px 0;font-size:18px">Editor v6.17</h2>
+<h2 style="margin:6px 0;font-size:18px">Editor v6.19</h2>
 <div class="file-wrap">
   <input type="file" id="upload" accept="image/*"> Foto base<br>
   <input type="file" id="uploadOverlay" accept="image/*"> Add imagem por cima
@@ -75,16 +75,26 @@ input[type=range]{width:75%;height:15px}
     <button class="seta" onclick="rotacionar(-90)">-90°</button>
   </div>
 
+  <!-- L+ L- A+ A- AGORA APARECE PRA TEXTO E RETÂNGULO -->
+  <div id="opcoesTamanho" style="display:none">
+    <div class="linha-botoes">
+      <button class="seta" onclick="alterarLargura(1.1)">L+</button>
+      <button class="seta" onclick="alterarLargura(0.9)">L-</button>
+      <button class="seta" onclick="alterarAltura(1.1)">A+</button>
+      <button class="seta" onclick="alterarAltura(0.9)">A-</button>
+    </div>
+  </div>
+
   <div class="slider-grupo">
     <label>Rotação: <span id="rotacaoValor">0</span>° | Opacidade: <span id="opacidadeValor">100</span>%</label>
     <input type="range" id="rotacaoSlider" min="0" max="360" value="0" oninput="mudarRotacaoLivre(this.value)" style="width:48%">
     <input type="range" id="opacidadeSlider" min="0" max="100" value="100" oninput="mudarOpacidade(this.value)" style="width:48%">
   </div>
 
-  <!-- Opções de Texto COM L+ L- A+ A- -->
   <div id="opcoesTexto" style="display:none">
     <div class="linha-botoes">
-      <input type="color" id="corTexto" value="#000000" onchange="mudarCor(this.value)">
+      <input type="color" id="corTexto" value="#000000" onchange="mudarCor(this.value)" title="Cor do texto">
+      <input type="color" id="corFundoTexto" value="#ffffff" onchange="mudarCorFundoTexto(this.value)" title="Cor do fundo">
       <select id="fonteTexto" onchange="mudarFonte(this.value)">
         <option value="Arial">Arial</option>
         <option value="Impact">Impact</option>
@@ -93,13 +103,6 @@ input[type=range]{width:75%;height:15px}
         <option value="Courier New">Courier</option>
         <option value="Verdana">Verdana</option>
       </select>
-    </div>
-    <div class="linha-botoes">
-      <input type="color" id="corFundoTexto" value="#ffffff" onchange="mudarCorFundoTexto(this.value)" title="Cor do fundo">
-      <button class="seta" onclick="alterarLargura(1.1)">L+</button>
-      <button class="seta" onclick="alterarLargura(0.9)">L-</button>
-      <button class="seta" onclick="alterarAltura(1.1)">A+</button>
-      <button class="seta" onclick="alterarAltura(0.9)">A-</button>
     </div>
     <div class="slider-grupo">
       <label>Opacidade Fundo: <span id="fundoOpacidadeValor">0</span>%</label>
@@ -116,14 +119,9 @@ input[type=range]{width:75%;height:15px}
     </div>
   </div>
 
-  <!-- Opções de Retângulo -->
   <div id="opcoesRetangulo" style="display:none">
     <div class="linha-botoes">
       <input type="color" id="corRetangulo" value="#e74c3c" onchange="mudarCor(this.value)">
-      <button class="seta" onclick="alterarLargura(1.1)">L+</button>
-      <button class="seta" onclick="alterarLargura(0.9)">L-</button>
-      <button class="seta" onclick="alterarAltura(1.1)">A+</button>
-      <button class="seta" onclick="alterarAltura(0.9)">A-</button>
     </div>
     <div class="cor-picker">
       <div class="cor" style="background:#e74c3c" onclick="mudarCor('#e74c3c')"></div>
@@ -177,6 +175,7 @@ const ctx = canvas.getContext('2d');
 const painel = document.getElementById('painelObjeto');
 const opcoesTexto = document.getElementById('opcoesTexto');
 const opcoesRetangulo = document.getElementById('opcoesRetangulo');
+const opcoesTamanho = document.getElementById('opcoesTamanho');
 const menuFundos = document.getElementById('menuFundos');
 const menuOverlay = document.getElementById('menuOverlay');
 let img = new Image();
@@ -272,7 +271,7 @@ uploadOverlay.onchange = e => {
 function fitToScreen(){
   let container = document.getElementById('editor-container');
   let maxW = container.offsetWidth;
-  let maxH = window.innerHeight * 0.6;
+  let maxH = 800;
 
   if(img.width > 0){
     let ratio = img.width / img.height;
@@ -282,6 +281,10 @@ function fitToScreen(){
     if(calcH > maxH){
       calcH = maxH;
       calcW = maxH * ratio;
+      if(calcW > maxW){
+        calcW = maxW;
+        calcH = maxW / ratio;
+      }
     }
 
     canvas.width = calcW;
@@ -323,8 +326,8 @@ function desenhar() {
     ctx.scale(obj.scale, obj.scale);
 
     if(obj.tipo === 'texto'){
-      // Desenha fundo do texto se tiver opacidade
-      if(obj.fundoOpacity > 0){
+      // Caixa sempre visível quando selecionado
+      if(selecionado === i || obj.fundoOpacity > 0){
         ctx.save();
         ctx.globalAlpha = obj.fundoOpacity;
         ctx.fillStyle = obj.corFundo;
@@ -379,10 +382,12 @@ function selecionar(index){
 
   opcoesTexto.style.display = 'none';
   opcoesRetangulo.style.display = 'none';
+  opcoesTamanho.style.display = 'none';
 
   if(objetos[index].tipo === 'texto'){
     tituloObj.innerText = 'Editando Texto';
     opcoesTexto.style.display = 'block';
+    opcoesTamanho.style.display = 'block'; // L+ L- A+ A- pra texto
     corTexto.value = objetos[index].cor;
     fonteTexto.value = objetos[index].fonte;
     corFundoTexto.value = objetos[index].corFundo;
@@ -391,6 +396,7 @@ function selecionar(index){
   } else if(objetos[index].tipo === 'rect'){
     tituloObj.innerText = 'Editando Retângulo';
     opcoesRetangulo.style.display = 'block';
+    opcoesTamanho.style.display = 'block'; // L+ L- A+ A- pra retângulo
     corRetangulo.value = objetos[index].cor;
   } else {
     tituloObj.innerText = 'Editando Imagem';
@@ -418,7 +424,6 @@ function alterarTamanho(fator){
     obj.size *= fator;
     if(obj.size < 10) obj.size = 10;
     if(obj.size > 200) obj.size = 200;
-    // Ajusta caixa junto
     obj.w *= fator;
     obj.h *= fator;
   } else if(obj.tipo === 'rect'){
